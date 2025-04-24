@@ -14,23 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createImage = exports.deleteById = exports.updateById = exports.create = exports.getOneById = exports.getAll = void 0;
 const joi_1 = __importDefault(require("joi"));
-const pg_promise_1 = __importDefault(require("pg-promise"));
-const db = (0, pg_promise_1.default)()("postgres://postgres:1234@localhost:5432/planetsdb");
-//poi si scrive la funzione setup di DB:
-const setupDB = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield db.none(`DROP TABLE IF EXISTS planets;`);
-    yield db.none(`CREATE TABLE planets(
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    image TEXT 
-    );` //si aggiunge il campo image nella query 
-    );
-    yield db.none(`INSERT INTO planets (name) VALUES ('Earth')`);
-    yield db.none(`INSERT INTO planets (name) VALUES ('Mars')`);
-    const planets = yield db.many(`SELECT * FROM planets;`);
-    console.log(planets);
-});
-setupDB();
+const db_js_1 = require("./../db.js");
 /* type Planet = { //si sposta il database nel file sotto controllers
     id: number;
     name: string;
@@ -50,13 +34,13 @@ const createSchema = joi_1.default.object({
     name: joi_1.default.string().min(3).max(20).required()
 });
 const getAll = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const planets = yield db.any(`SELECT * FROM planets;`);
+    const planets = yield db_js_1.db.any(`SELECT * FROM planets;`);
     res.status(200).json(planets);
 });
 exports.getAll = getAll;
 const getOneById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const planet = yield db.any(`SELECT * FROM planets WHERE id=$1;`, Number(id));
+    const planet = yield db_js_1.db.any(`SELECT * FROM planets WHERE id=$1;`, Number(id));
     /* const planet = planets.find(p => p.id === Number(id)) */
     //qui si gestisce l'errore 
     if (planet !== undefined) {
@@ -80,7 +64,7 @@ const create = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     else {
         /*  planets= [...planets, newPlanet]; //utilizzo dello spread operator */
-        yield db.none(`INSERT INTO planets (name) VALUES ($1)`, name);
+        yield db_js_1.db.none(`INSERT INTO planets (name) VALUES ($1)`, name);
         res.status(201).json({ msg: 'Planet created successfully' }); //ri restituisce il messaggio di successo della chiamata 
     }
 });
@@ -89,13 +73,13 @@ const updateById = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const { id } = req.params;
     const { name } = req.body;
     /*  planets = planets.map(p=> p.id === Number(id) ? ({...p, name}) : p) */
-    yield db.none(`UPDATE planets SET name=$2 WHERE id=$1`, [id, name]);
+    yield db_js_1.db.none(`UPDATE planets SET name=$2 WHERE id=$1`, [id, name]);
     res.status(200).json({ msg: 'Planet updated successfully' });
 });
 exports.updateById = updateById;
 const deleteById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    yield db.none(`DELETE FROM planets WHERE id=$1`, Number(id));
+    yield db_js_1.db.none(`DELETE FROM planets WHERE id=$1`, Number(id));
     /* const planetIndex = planets.findIndex(p => p.id === Number(id)); */
     /*  planets.splice(planetIndex, 1);  // Rimuovi il pianeta dal "database" */
     res.status(200).json({ msg: 'Planet deleted successfully' });
@@ -106,7 +90,7 @@ const createImage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const { id } = req.params;
     const fileName = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
     if (fileName) {
-        db.none(`UPDATE planets SET image=$2 WHERE id=$1`, [id, fileName]);
+        db_js_1.db.none(`UPDATE planets SET image=$2 WHERE id=$1`, [id, fileName]);
         res.status(201).json({ msg: "Planet image uploaded successfully" });
     }
     else {

@@ -7,7 +7,10 @@ const express_1 = __importDefault(require("express"));
 const morgan_1 = __importDefault(require("morgan"));
 require("express-async-errors"); // Gestione errori async
 const planets_js_1 = require("./controllers/planets.js");
+const users_1 = require("./controllers/users");
+const authorize_1 = __importDefault(require("./authorize"));
 const multer_1 = __importDefault(require("multer"));
+require("./passport");
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
         cb(null, "./uploads");
@@ -37,6 +40,9 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Errore interno del server' });
 });
 app.post("/api/planets/:id/image", upload.single("image"), planets_js_1.createImage);
+app.post("/api/users/login", users_1.logIn);
+app.post("/api/users/signup", users_1.signUp);
+app.get("/api/users/logout", authorize_1.default, users_1.logOut);
 app.listen(PORT, () => {
     console.log(` Server in ascolto su http://localhost:${PORT}`);
 });
